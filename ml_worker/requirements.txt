@@ -1,0 +1,17 @@
+# ML Pipeline
+torch
+torchvision
+opencv-python-headless
+numpy
+retina-face
+transformers
+Pillow
+tqdm
+
+# API Server
+fastapi
+uvicorn[standard]
+python-multipart
+
+# HTTP client (for downloading videos from R2)
+requests

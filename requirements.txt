@@ -1,5 +1,31 @@
+# ML Pipeline (local dev only — NOT installed on Render)
 torch
 torchvision
 opencv-python
 numpy
-matplotlib
+retina-face
+transformers
+tqdm
+Pillow
+
+# Backend
+django
+djangorestframework
+django-cors-headers
+psycopg2-binary
+
+# Async Workers
+celery
+redis
+
+# Production server
+gunicorn
+whitenoise
+
+# Cloud storage (Cloudflare R2 via S3-compatible API)
+django-storages
+boto3
+
+# Environment variable management
+python-decouple
+dj-database-url

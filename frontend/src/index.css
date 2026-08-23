@@ -1,0 +1,722 @@
+/* ==========================================================================
+   CROWD ANALYTICS — GLOBAL DESIGN SYSTEM
+   Deep-slate premium SaaS theme. Indigo/violet accents, monospace data type.
+   Drop-in replacement. No JSX/markup changes required.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* --------------------------------------------------------------------------
+   1. DESIGN TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  /* Core surfaces */
+  --bg-primary: #0a0b10;
+  --bg-secondary: #11131a;
+  --bg-tertiary: #171923;
+  --bg-card: #14161f;
+  --bg-card-hover: #181b26;
+  --bg-elevated: #1b1e2a;
+  --bg-input: #0d0f16;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-accent: rgba(124, 58, 237, 0.4);
+
+  /* Text */
+  --text-primary: #f4f5f8;
+  --text-secondary: #9599ac;
+  --text-tertiary: #5c6072;
+  --text-disabled: #3d4050;
+
+  /* Accents */
+  --accent-blue: #4f46e5;
+  --accent-blue-soft: #4f46e526;
+  --accent-purple: #7c3aed;
+  --accent-purple-soft: #7c3aed26;
+  --accent-green: #10b981;
+  --accent-green-soft: #10b98126;
+  --accent-red: #ef4444;
+  --accent-red-soft: #ef444426;
+  --accent-amber: #f59e0b;
+  --accent-amber-soft: #f59e0b26;
+
+  /* Gradient accent, used sparingly (hero numbers, active nav, primary CTA) */
+  --gradient-accent: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --gradient-surface: linear-gradient(180deg, #16182280 0%, #14161f00 100%);
+  --gradient-glow: radial-gradient(circle at 50% 0%, rgba(79, 70, 229, 0.12), transparent 60%);
+
+  /* Radius scale */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Shadows — soft, directional, no neon bleed */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-blue: 0 0 0 1px rgba(79, 70, 229, 0.25), 0 8px 24px rgba(79, 70, 229, 0.12);
+  --shadow-glow-purple: 0 0 0 1px rgba(124, 58, 237, 0.25), 0 8px 24px rgba(124, 58, 237, 0.12);
+
+  /* Typography */
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* Motion */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & BASE
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    var(--gradient-glow),
+    var(--bg-primary);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+}
+
+#root,
+#app {
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   3. TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 var(--space-2);
+}
+
+h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
+h2 { font-size: 22px; font-weight: 700; }
+h3 { font-size: 17px; font-weight: 600; }
+h4, h5, h6 { font-size: 14px; font-weight: 600; }
+
+p { margin: 0 0 var(--space-3); color: var(--text-secondary); }
+
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+a:hover { color: #6366f1; }
+
+small, .text-sm { font-size: 12.5px; }
+.text-xs { font-size: 11px; }
+
+/* Numeric / data type — the signature detail. Any element carrying a metric,
+   stat, count, percentage, or timestamp should render in tabular monospace. */
+.stat, .stat-value, .metric, .metric-value, .kpi-value, .value,
+.stat-card .number, .card .number, [class*="count"], [class*="Count"],
+[class*="stat-number"], [class*="metric-number"], .chart-card .value,
+.big-number, .hero-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero-number, .big-number, [class*="hero-stat"] {
+  font-size: clamp(32px, 4vw, 48px);
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Any table cell, code, badge, or timestamp text also picks up tabular nums */
+code, pre, .mono, [class*="timestamp"], [class*="Timestamp"], time {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   4. SCROLLBAR
+   -------------------------------------------------------------------------- */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+::selection {
+  background: var(--accent-purple-soft);
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   5. SURFACES — cards, panels, glass (redefined away from heavy blur)
+   -------------------------------------------------------------------------- */
+.card, .glass-card, .glass, .panel, .surface, .stat-card, .metric-card,
+.kpi-card, .chart-card, .dashboard-card, .widget, [class*="Card"] {
+  background: var(--bg-card);
+  background-image: var(--gradient-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+  backdrop-filter: none;
+  transition: var(--transition);
+}
+
+.card:hover, .glass-card:hover, .stat-card:hover, .metric-card:hover,
+.kpi-card:hover, .chart-card:hover, .dashboard-card:hover, .widget:hover,
+[class*="Card"]:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.card.interactive:hover, .card[role="button"]:hover, .clickable-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.card-header, .panel-header, .widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title, .panel-title, .widget-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-subtitle, .panel-subtitle, .text-muted, .subtitle {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.divider, hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-4) 0;
+}
+
+/* --------------------------------------------------------------------------
+   6. LAYOUT — sidebar, header, grids
+   -------------------------------------------------------------------------- */
+.sidebar, .side-nav, aside[class*="sidebar"], nav.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+}
+
+.header, .topbar, .navbar, header[class*="header"] {
+  background: rgba(10, 11, 16, 0.85);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.nav-item, .nav-link, .sidebar-item, .menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.nav-item:hover, .nav-link:hover, .sidebar-item:hover, .menu-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.nav-item.active, .nav-link.active, .sidebar-item.active, .menu-item.active,
+.nav-item[aria-current="page"], .nav-link[aria-current="page"] {
+  color: var(--text-primary);
+  background: var(--accent-purple-soft);
+  border: 1px solid var(--border-accent);
+}
+
+.dashboard-grid, .grid, .stats-grid, .kpi-grid, .cards-grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.container, .page, .content, main {
+  padding: var(--space-6) var(--space-8);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   7. BUTTONS & INPUTS
+   -------------------------------------------------------------------------- */
+button, .btn, .button {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+button:hover, .btn:hover, .button:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+button:active, .btn:active, .button:active { transform: translateY(0); }
+
+.btn-primary, .button-primary, [class*="primary"]:is(button, .btn) {
+  background: var(--gradient-accent);
+  border: 1px solid transparent;
+  color: #fff;
+  box-shadow: var(--shadow-glow-blue);
+}
+.btn-primary:hover, .button-primary:hover { filter: brightness(1.08); }
+
+.btn-secondary, .button-secondary {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+.btn-secondary:hover { color: var(--text-primary); border-color: var(--border-accent); }
+
+.btn-danger, .button-danger { background: var(--accent-red-soft); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+.btn-icon, .icon-button { padding: var(--space-2); border-radius: var(--radius-sm); }
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px var(--accent-purple-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   8. BADGES, TAGS, STATUS
+   -------------------------------------------------------------------------- */
+.badge, .tag, .chip, .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.badge-success, .tag-success, .status-success, .badge.success, [class*="success"] {
+  background: var(--accent-green-soft); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3);
+}
+.badge-danger, .tag-danger, .status-danger, .badge.danger, .badge-error, [class*="danger"], [class*="error"] {
+  background: var(--accent-red-soft); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);
+}
+.badge-warning, .tag-warning, .status-warning, .badge.warning, [class*="warning"] {
+  background: var(--accent-amber-soft); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);
+}
+.badge-info, .tag-info, .status-info, .badge.info, [class*="info"] {
+  background: var(--accent-blue-soft); color: #a5b4fc; border-color: rgba(79, 70, 229, 0.3);
+}
+
+.status-dot, .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--accent-green-soft);
+}
+.status-dot.offline, .status-dot.inactive { background: var(--text-tertiary); box-shadow: none; }
+.status-dot.warning { background: var(--accent-amber); box-shadow: 0 0 0 3px var(--accent-amber-soft); }
+.status-dot.danger { background: var(--accent-red); box-shadow: 0 0 0 3px var(--accent-red-soft); }
+
+/* --------------------------------------------------------------------------
+   9. TABLES
+   -------------------------------------------------------------------------- */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+thead th {
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+tbody tr { transition: var(--transition-fast); }
+tbody tr:hover { background: var(--bg-elevated); }
+tbody tr:last-child td { border-bottom: none; }
+
+/* --------------------------------------------------------------------------
+   10. TOOLTIPS & POPOVERS
+   -------------------------------------------------------------------------- */
+.tooltip, [class*="Tooltip"], [role="tooltip"] {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2) var(--space-3);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   11. RECHARTS — target the library's own injected classes directly so
+   charts stay visually consistent regardless of wrapper class names.
+   -------------------------------------------------------------------------- */
+.recharts-wrapper { font-family: var(--font-mono); }
+
+.recharts-cartesian-grid line {
+  stroke: var(--border);
+  stroke-dasharray: 3 6;
+}
+
+.recharts-cartesian-axis-line, .recharts-cartesian-axis-tick-line {
+  stroke: var(--border-strong);
+}
+
+.recharts-text, .recharts-cartesian-axis-tick text {
+  fill: var(--text-tertiary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.recharts-legend-item-text { color: var(--text-secondary) !important; font-family: var(--font-body); font-size: 12.5px; }
+
+.recharts-tooltip-wrapper { outline: none; }
+.recharts-default-tooltip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2) var(--space-3) !important;
+}
+.recharts-tooltip-label { color: var(--text-primary) !important; font-weight: 600; margin-bottom: 4px !important; }
+.recharts-tooltip-item { color: var(--text-secondary) !important; font-family: var(--font-mono) !important; }
+
+.recharts-pie-sector, .recharts-bar-rectangle, .recharts-area, .recharts-line-curve {
+  transition: var(--transition-fast);
+}
+
+.recharts-active-dot circle { stroke: var(--bg-card); stroke-width: 2; }
+
+.recharts-surface { overflow: visible; }
+
+/* --------------------------------------------------------------------------
+   12. MOTION
+   -------------------------------------------------------------------------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card, .glass-card, .stat-card, .metric-card, .kpi-card, .chart-card, .dashboard-card {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   13. RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .container, .page, .content, main { padding: var(--space-4) var(--space-5); }
+  h1 { font-size: 24px; }
+  .hero-number, .big-number { font-size: clamp(26px, 6vw, 36px); }
+}
+
+@media (max-width: 640px) {
+  .card, .glass-card, .stat-card, .metric-card, .kpi-card, .chart-card, .dashboard-card {
+    padding: var(--space-4);
+  }
+  .container, .page, .content, main { padding: var(--space-3) var(--space-4); }
+}
+
+/* ==========================================================================
+   14. LAYOUT-CRITICAL BUG FIXES (Sidebar & Grid Alignment)
+   These fixes bridge the original semantic JSX class layout structure 
+   with the new CSS Variable theme.
+   ========================================================================== */
+
+/* Fixed Sidebar Layout */
+.sidebar {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 0 var(--space-6) var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--gradient-accent);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.sidebar-logo-text {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sidebar-logo-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  flex-grow: 1;
+}
+
+.sidebar-footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+/* Main Content Offset */
+.main-content {
+  flex: 1;
+  margin-left: 240px; /* Offset for fixed sidebar */
+  padding: var(--space-8);
+  min-height: 100vh;
+}
+
+/* Horizontal Stats Grid Columns Alignment */
+.stats-grid {
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .main-content {
+    margin-left: 0;
+    padding: var(--space-6);
+  }
+  .sidebar {
+    position: relative;
+    height: auto;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .app-layout {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Spinner Styles */
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--accent-purple);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Chart Container styling to prevent collapses */
+.chart-container {
+  height: 350px;
+  position: relative;
+  width: 100%;
+}
+
+/* Emotion Legend Custom Styles */
+.emotion-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  padding: 16px var(--space-6);
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Upload Dropzone Styles */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px var(--space-6);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.01);
+  border: 2px dashed var(--border);
+  transition: var(--transition);
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+  background: rgba(124, 58, 237, 0.03); /* Subtle accent purple glow */
+  border-color: var(--accent-purple);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.upload-icon {
+  font-size: 40px;
+  margin-bottom: var(--space-4);
+  display: block;
+}
+
+.upload-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.upload-subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}

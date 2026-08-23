@@ -1,0 +1,80 @@
+# render.yaml — Render.com deployment configuration
+# Defines the Django API web service and Celery background worker.
+# Deploy by connecting your GitHub repo to Render and pointing it at this file.
+
+services:
+  # ── Django REST API ────────────────────────────────────────────────────────
+  - type: web
+    name: expressiondetector-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements-prod.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "expressiondetector-api.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: expressiondetector-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false   # Set manually in Render dashboard (Upstash Redis URL)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false   # Set to your Vercel frontend URL
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: ML_WORKER_URL
+        value: https://expressiondetector-ml-382923967575.us-central1.run.app
+
+  # ── Celery Background Worker ───────────────────────────────────────────────
+  - type: worker
+    name: expressiondetector-worker
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: celery -A core worker --loglevel=info --pool=solo --concurrency=1
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        fromService:
+          name: expressiondetector-api
+          type: web
+          property: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: expressiondetector-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: ML_WORKER_URL
+        value: https://expressiondetector-ml-382923967575.us-central1.run.app
+
+databases:
+  - name: expressiondetector-db
+    plan: free
+    region: oregon

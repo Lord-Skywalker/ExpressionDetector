@@ -1,0 +1,28 @@
+# Production requirements for Render.com (Django API + Celery worker)
+# ML packages (torch, transformers, etc.) are intentionally excluded.
+# The ML pipeline runs on HuggingFace Spaces, not on Render.
+
+# Backend
+django
+djangorestframework
+django-cors-headers
+psycopg2-binary
+
+# Async Workers (broker = Upstash Redis in production)
+celery
+redis
+
+# Production server
+gunicorn
+whitenoise
+
+# Cloud storage (Cloudflare R2)
+django-storages
+boto3
+
+# Environment variable management
+python-decouple
+dj-database-url
+
+# HTTP client (Celery worker calls HuggingFace Space)
+requests
