@@ -242,12 +242,15 @@ class VideoAssetUploadView(APIView):
     def post(self, request):
         serializer = VideoAssetSerializer(data=request.data)
         if serializer.is_valid():
-            video_asset = serializer.save(status="PENDING")
-            process_video_asset.delay(video_asset.id)
+            asset = serializer.save(status="PENDING")
+            if asset.status == 'PENDING':
+                import threading
+                from .tasks import process_video_asset
+                threading.Thread(target=process_video_asset, args=(asset.id,), daemon=True).start()
             return Response(
                 {
                     "message": "Video uploaded successfully. Processing has been queued.",
-                    "video_asset": VideoAssetSerializer(video_asset).data,
+                    "video_asset": VideoAssetSerializer(asset).data,
                 },
                 status=status.HTTP_202_ACCEPTED,
             )

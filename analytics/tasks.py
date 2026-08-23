@@ -1,11 +1,9 @@
 import os
 import requests as http_client
-from celery import shared_task
 from django.conf import settings
 from .models import VideoAsset, CrowdAnalytics
 
 
-@shared_task
 def process_video_asset(video_asset_id):
     try:
         video_asset = VideoAsset.objects.get(id=video_asset_id)

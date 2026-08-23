@@ -44,31 +44,6 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
 
-  # ── Celery Background Worker ───────────────────────────────────────────────
-  - type: worker
-    name: expressiondetector-worker
-    runtime: python
-    region: oregon
-    plan: free
-    buildCommand: pip install -r requirements-prod.txt
-    startCommand: celery -A core worker --loglevel=info --pool=solo --concurrency=1
-    envVars:
-      - fromGroup: shared-django-env
-      - key: DEBUG
-        value: "False"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: expressiondetector-db
-          property: connectionString
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_BUCKET_NAME
-        sync: false
-      - key: R2_ENDPOINT_URL
-        sync: false
-      - key: R2_PUBLIC_URL
-        sync: false
-
 databases:
   - name: expressiondetector-db
     plan: free
