@@ -9,8 +9,12 @@ ML imports are wrapped in a try/except so the Django process on Render
 """
 
 import base64
-import cv2
-import numpy as np
+
+try:
+    import cv2
+    import numpy as np
+except ImportError:
+    pass  # Production environment (Render) does not have OpenCV installed
 
 from rest_framework import generics, status
 from rest_framework.response import Response
