@@ -110,11 +110,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://localhost:5173",
-    cast=Csv(),
-)
+raw_cors = config("CORS_ALLOWED_ORIGINS", default="http://localhost:3000,http://localhost:5173")
+if raw_cors.strip() == "*":
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [url.strip() for url in raw_cors.split(",")]
 
 
 # ── Celery ────────────────────────────────────────────────────────────────────
