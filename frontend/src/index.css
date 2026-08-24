@@ -645,7 +645,24 @@ tbody tr:last-child td { border-bottom: none; }
   margin: 0 auto;
 }
 
+.mobile-header {
+  display: none; /* Hidden on desktop */
+}
+
 @media (max-width: 1024px) {
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    background: rgba(10, 11, 16, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
   .events-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .main-content {

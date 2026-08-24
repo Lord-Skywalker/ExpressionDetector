@@ -22,6 +22,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="app-layout">
+        {/* Mobile Top Header (Hidden on Desktop) */}
+        <div className="mobile-header">
+          <div className="sidebar-logo-icon">🧠</div>
+          <div>
+            <div className="sidebar-logo-text">CrowdySense</div>
+            <div className="sidebar-logo-sub">AI ANALYTICS</div>
+          </div>
+        </div>
+
         <Sidebar />
         <main className="main-content">
           <Routes>
