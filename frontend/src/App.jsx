@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { wakeUpMLWorker } from './api';
+import { wakeUpServers } from './api';
 import Sidebar from './Sidebar';
 import DashboardPage from './DashboardPage';
 import UploadPage from './UploadPage';
@@ -16,7 +16,7 @@ export default function App() {
   useEffect(() => {
     // Silently wake up the Cloud Run ML worker in the background
     // so it's warm and ready by the time the user uploads a video or starts Live Mode.
-    wakeUpMLWorker();
+    wakeUpServers();
   }, []);
 
   return (

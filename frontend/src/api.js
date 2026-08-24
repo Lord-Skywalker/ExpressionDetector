@@ -10,11 +10,14 @@ const API = axios.create({
 // In local dev: falls back to Django API (which handles live detection locally).
 export const ML_WORKER_URL = import.meta.env.VITE_ML_WORKER_URL || "http://localhost:7860";
 
-// Silently pings the ML worker to pre-warm the Cloud Run instance
-export const wakeUpMLWorker = () => {
-  if (import.meta.env.PROD && import.meta.env.VITE_ML_WORKER_URL) {
-    fetch(`${import.meta.env.VITE_ML_WORKER_URL}/health`)
-      .catch(() => {}); // Ignore errors, this is just a pre-warm ping
+// Silently pings the ML worker and Django API to pre-warm the servers
+export const wakeUpServers = () => {
+  if (import.meta.env.PROD) {
+    if (import.meta.env.VITE_ML_WORKER_URL) {
+      fetch(`${import.meta.env.VITE_ML_WORKER_URL}/health`).catch(() => {});
+    }
+    // Ping the Django API to wake up Render instances
+    API.get('/events/').catch(() => {});
   }
 };
 
