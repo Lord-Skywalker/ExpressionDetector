@@ -26,6 +26,7 @@ class OfflineAudienceAnalytics:
             self.device
         )
         self.model.eval()
+        self.retina_model = RetinaFace.build_model()
 
         self.target_fps = fps  # Frames to process per second of video
 
@@ -93,7 +94,7 @@ class OfflineAudienceAnalytics:
 
         # Detect faces using RetinaFace
         try:
-            faces = RetinaFace.detect_faces(frame_rgb)
+            faces = RetinaFace.detect_faces(frame_rgb, model=self.retina_model)
         except Exception as e:
             print(f"Error detecting faces at {timestamp}s: {e}")
             faces = {}

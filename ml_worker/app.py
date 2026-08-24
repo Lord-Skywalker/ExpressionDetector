@@ -94,10 +94,13 @@ class ModelSingleton:
             processor = ViTImageProcessor.from_pretrained(model_name)
             model = ViTForImageClassification.from_pretrained(model_name).to(device)
             model.eval()
+            from retinaface import RetinaFace
+            retina_model = RetinaFace.build_model()
             cls._live_models = {
                 "processor": processor,
                 "model": model,
                 "device": device,
+                "retina_model": retina_model,
             }
             print(f"[✓] Live models loaded on {device}.")
         return cls._live_models
@@ -229,9 +232,8 @@ def live_detect(req: LiveDetectRequest):
     except Exception as e:
         return {"error": str(e)}, 400
 
-    from retinaface import RetinaFace
     try:
-        faces_detected = RetinaFace.detect_faces(img_bgr)
+        faces_detected = RetinaFace.detect_faces(img_bgr, model=models["retina_model"])
     except Exception as e:
         print(f"[!] RetinaFace error: {e}")
         faces_detected = {}
