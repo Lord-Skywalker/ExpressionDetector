@@ -17,9 +17,8 @@ import base64
 import os
 import tempfile
 import warnings
+import threading
 
-import cv2
-import numpy as np
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, UploadFile
@@ -51,15 +50,10 @@ class ModelSingleton:
 
     _pipeline = None
     _live_models = None
+    _lock = threading.Lock()
 
     @classmethod
     def get_pipeline(cls):
-        if cls._pipeline is None:
-            print("[*] Loading OfflineAudienceAnalytics pipeline...")
-            from offline_processor import OfflineAudienceAnalytics
-            # Share the live models with the offline pipeline to prevent OOM
-            live_models = cls.get_live_models()
-            cls._pipeline = OfflineAudienceAnalytics(fps=1, preloaded_models=live_models)
             print("[✓] Pipeline ready.")
         return cls._pipeline
 
@@ -198,19 +192,26 @@ async def process_video(
     Runs the full RetinaFace + ViT pipeline and returns timeline JSON.
     No external storage service required — the file is streamed directly.
     """
+    print(f"[DEBUG] Received /process request. File: {file.filename}, FPS: {fps}")
     pipeline = ModelSingleton.get_pipeline()
 
     # Save uploaded file to a temp location for processing
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
+            print("[DEBUG] Reading uploaded file into memory...")
             content = await file.read()
+            print(f"[DEBUG] File read complete. Size: {len(content)} bytes. Writing to disk...")
             f.write(content)
             tmp_path = f.name
+            print(f"[DEBUG] File saved to temp path: {tmp_path}")
     except Exception as e:
+        print(f"[!] Failed to save uploaded file: {e}")
         return {"error": f"Failed to save uploaded file: {str(e)}"}, 400
 
     try:
+        print("[DEBUG] Starting pipeline.process_video...")
         timeline_data = pipeline.process_video(tmp_path, output_json=None)
+        print(f"[DEBUG] Pipeline finished! Generated {len(timeline_data) if timeline_data else 0} timeline entries.")
         if not timeline_data:
             return {"error": "No timeline data generated — video may be empty or corrupt."}, 422
         return {"timeline": timeline_data}

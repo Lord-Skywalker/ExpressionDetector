@@ -72,9 +72,14 @@ class OfflineAudienceAnalytics:
                 break
 
             if frame_idx % frame_skip == 0:
+                print(f"[DEBUG] Processing frame {frame_idx}/{total_frames} (timestamp: {frame_idx / video_fps:.2f}s)")
                 timestamp = frame_idx / video_fps
+                
+                print(f"[DEBUG] Analyzing frame {frame_idx}...")
                 frame_data = self._analyze_frame(frame, timestamp)
                 timeline_data.append(frame_data)
+                
+                print(f"[DEBUG] Frame {frame_idx} analyzed successfully.")
                 if progress_callback and total_frames > 0:
                     percent = int((frame_idx / total_frames) * 100)
                     progress_callback(percent)
