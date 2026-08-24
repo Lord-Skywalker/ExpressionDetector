@@ -21,9 +21,11 @@ import threading
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from retinaface import RetinaFace
 
 warnings.filterwarnings("ignore")
 
@@ -54,57 +56,59 @@ class ModelSingleton:
 
     @classmethod
     def get_pipeline(cls):
-        with cls._lock:
-            if cls._pipeline is None:
-                print("[*] Loading OfflineAudienceAnalytics pipeline...")
-                from offline_processor import OfflineAudienceAnalytics
-                live_models = cls.get_live_models()
-                cls._pipeline = OfflineAudienceAnalytics(fps=1, preloaded_models=live_models)
-                print("[✓] Pipeline ready.")
+        if cls._pipeline is None:
+            print("[*] Loading OfflineAudienceAnalytics pipeline...")
+            from offline_processor import OfflineAudienceAnalytics
+            # Load live models first (self-locking) before acquiring our own lock
+            live_models = cls.get_live_models()
+            with cls._lock:
+                if cls._pipeline is None:  # Double-checked locking
+                    cls._pipeline = OfflineAudienceAnalytics(fps=1, preloaded_models=live_models)
+                    print("[✓] Pipeline ready.")
         return cls._pipeline
 
     @classmethod
     def get_live_models(cls) -> dict:
-        if cls._live_models is None:
-            print("[*] Loading live detection models...")
-            try:
-                import torch
-                print(f"[DEBUG] torch imported successfully, version: {torch.__version__}")
-            except Exception as e:
-                print(f"[!] FAILED TO IMPORT TORCH: {e}")
-                import traceback
-                traceback.print_exc()
-
-            try:
-                from transformers.models.vit.modeling_vit import ViTForImageClassification
-                from transformers.models.vit.image_processing_vit import ViTImageProcessor
-                print("[DEBUG] transformers imported successfully.")
-            except Exception as e:
-                print(f"[!] FAILED TO IMPORT transformers: {e}")
-                import traceback
-                traceback.print_exc()
-                
-                # Check if torch is available according to transformers
+        with cls._lock:
+            if cls._live_models is None:
+                print("[*] Loading live detection models...")
                 try:
-                    from transformers.utils.import_utils import is_torch_available
-                    print(f"[DEBUG] transformers is_torch_available: {is_torch_available()}")
-                except:
-                    pass
-            
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            model_name = "afurkank/vit-face-expression"
-            processor = ViTImageProcessor.from_pretrained(model_name)
-            model = ViTForImageClassification.from_pretrained(model_name).to(device)
-            model.eval()
-            from retinaface import RetinaFace
-            retina_model = RetinaFace.build_model()
-            cls._live_models = {
-                "processor": processor,
-                "model": model,
-                "device": device,
-                "retina_model": retina_model,
-            }
-            print(f"[✓] Live models loaded on {device}.")
+                    import torch
+                    print(f"[DEBUG] torch imported successfully, version: {torch.__version__}")
+                except Exception as e:
+                    print(f"[!] FAILED TO IMPORT TORCH: {e}")
+                    import traceback
+                    traceback.print_exc()
+
+                try:
+                    from transformers.models.vit.modeling_vit import ViTForImageClassification
+                    from transformers.models.vit.image_processing_vit import ViTImageProcessor
+                    print("[DEBUG] transformers imported successfully.")
+                except Exception as e:
+                    print(f"[!] FAILED TO IMPORT transformers: {e}")
+                    import traceback
+                    traceback.print_exc()
+
+                    # Check if torch is available according to transformers
+                    try:
+                        from transformers.utils.import_utils import is_torch_available
+                        print(f"[DEBUG] transformers is_torch_available: {is_torch_available()}")
+                    except:
+                        pass
+
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                model_name = "afurkank/vit-face-expression"
+                processor = ViTImageProcessor.from_pretrained(model_name)
+                model = ViTForImageClassification.from_pretrained(model_name).to(device)
+                model.eval()
+                retina_model = RetinaFace.build_model()
+                cls._live_models = {
+                    "processor": processor,
+                    "model": model,
+                    "device": device,
+                    "retina_model": retina_model,
+                }
+                print(f"[✓] Live models loaded on {device}.")
         return cls._live_models
 
 
@@ -212,14 +216,14 @@ async def process_video(
             print(f"[DEBUG] File saved to temp path: {tmp_path}")
     except Exception as e:
         print(f"[!] Failed to save uploaded file: {e}")
-        return {"error": f"Failed to save uploaded file: {str(e)}"}, 400
+        raise HTTPException(status_code=400, detail=f"Failed to save uploaded file: {str(e)}")
 
     try:
         print("[DEBUG] Starting pipeline.process_video...")
         timeline_data = pipeline.process_video(tmp_path, output_json=None)
         print(f"[DEBUG] Pipeline finished! Generated {len(timeline_data) if timeline_data else 0} timeline entries.")
         if not timeline_data:
-            return {"error": "No timeline data generated — video may be empty or corrupt."}, 422
+            raise HTTPException(status_code=422, detail="No timeline data generated — video may be empty or corrupt.")
         return {"timeline": timeline_data}
     finally:
         if os.path.exists(tmp_path):
@@ -239,7 +243,7 @@ def live_detect(req: LiveDetectRequest):
     try:
         img_bgr = decode_base64_image(req.image)
     except Exception as e:
-        return {"error": str(e)}, 400
+        raise HTTPException(status_code=400, detail=str(e))
 
     try:
         faces_detected = RetinaFace.detect_faces(img_bgr, model=models["retina_model"])
@@ -287,7 +291,7 @@ def live_classify(req: LiveClassifyRequest):
     try:
         img_bgr = decode_base64_image(req.image)
     except Exception as e:
-        return {"error": str(e)}, 400
+        raise HTTPException(status_code=400, detail=str(e))
 
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
@@ -296,4 +300,4 @@ def live_classify(req: LiveClassifyRequest):
         return result
     except Exception as e:
         print(f"[!] Live classification error: {e}")
-        return {"error": f"Model inference failed: {str(e)}"}, 500
+        raise HTTPException(status_code=500, detail=f"Model inference failed: {str(e)}")

@@ -3,28 +3,38 @@ import json
 import os
 import torch
 from retinaface import RetinaFace
-from transformers import ViTImageProcessor, ViTForImageClassification
+from transformers.models.vit.image_processing_vit import ViTImageProcessor
+from transformers.models.vit.modeling_vit import ViTForImageClassification
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
 import math
 import warnings
+import gc
 
 warnings.filterwarnings("ignore")
 
 
 class OfflineAudienceAnalytics:
-    def __init__(self, fps=1):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"[*] Initializing ML Models on {self.device}...")
+    def __init__(self, fps=1, preloaded_models=None):
+        if preloaded_models:
+            self.device = preloaded_models["device"]
+            self.processor = preloaded_models["processor"]
+            self.model = preloaded_models["model"]
+            self.retina_model = preloaded_models["retina_model"]
+            print(f"[*] Re-using preloaded ML Models on {self.device}...")
+        else:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            print(f"[*] Initializing ML Models on {self.device}...")
 
-        # Load ViT for FER (Fine-tuned on FER2013)
-        model_name = "afurkank/vit-face-expression"
-        self.processor = ViTImageProcessor.from_pretrained(model_name)
-        self.model = ViTForImageClassification.from_pretrained(model_name).to(
-            self.device
-        )
-        self.model.eval()
+            # Load ViT for FER (Fine-tuned on FER2013)
+            model_name = "afurkank/vit-face-expression"
+            self.processor = ViTImageProcessor.from_pretrained(model_name)
+            self.model = ViTForImageClassification.from_pretrained(model_name).to(
+                self.device
+            )
+            self.model.eval()
+            self.retina_model = RetinaFace.build_model()
 
         self.target_fps = fps  # Frames to process per second of video
 
@@ -62,15 +72,24 @@ class OfflineAudienceAnalytics:
                 break
 
             if frame_idx % frame_skip == 0:
+                print(f"[DEBUG] Processing frame {frame_idx}/{total_frames} (timestamp: {frame_idx / video_fps:.2f}s)")
                 timestamp = frame_idx / video_fps
+
+                print(f"[DEBUG] Analyzing frame {frame_idx}...")
                 frame_data = self._analyze_frame(frame, timestamp)
                 timeline_data.append(frame_data)
+
+                print(f"[DEBUG] Frame {frame_idx} analyzed successfully.")
                 if progress_callback and total_frames > 0:
                     percent = int((frame_idx / total_frames) * 100)
                     progress_callback(percent)
 
             frame_idx += 1
             pbar.update(1)
+
+            # Force garbage collection to prevent TF/PyTorch memory leaks across frames
+            if frame_idx % 10 == 0:
+                gc.collect()
 
         pbar.close()
         cap.release()
@@ -83,16 +102,24 @@ class OfflineAudienceAnalytics:
             with open(output_json, 'w') as f:
                 json.dump(timeline_data, f, indent=4)
             print(f"[*] Analysis complete. Results saved to {output_json}")
-            
+
         return timeline_data
 
     def _analyze_frame(self, frame_bgr, timestamp):
+        # Resize frame to prevent massive memory spikes with high-res videos
+        h, w = frame_bgr.shape[:2]
+        max_width = 640
+        if w > max_width:
+            scale = max_width / float(w)
+            new_h, new_w = int(h * scale), max_width
+            frame_bgr = cv2.resize(frame_bgr, (new_w, new_h))
+
         # RetinaFace works with RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
         # Detect faces using RetinaFace
         try:
-            faces = RetinaFace.detect_faces(frame_rgb)
+            faces = RetinaFace.detect_faces(frame_rgb, model=self.retina_model)
         except Exception as e:
             print(f"Error detecting faces at {timestamp}s: {e}")
             faces = {}
