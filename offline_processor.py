@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 import math
 import warnings
+import gc
 
 warnings.filterwarnings("ignore")
 
@@ -80,6 +81,10 @@ class OfflineAudienceAnalytics:
 
             frame_idx += 1
             pbar.update(1)
+            
+            # Force garbage collection to prevent TF/PyTorch memory leaks across frames
+            if frame_idx % 10 == 0:
+                gc.collect()
 
         pbar.close()
         cap.release()
@@ -96,6 +101,14 @@ class OfflineAudienceAnalytics:
         return timeline_data
 
     def _analyze_frame(self, frame_bgr, timestamp):
+        # Resize frame to prevent massive memory spikes with high-res videos
+        h, w = frame_bgr.shape[:2]
+        max_width = 640
+        if w > max_width:
+            scale = max_width / float(w)
+            new_h, new_w = int(h * scale), max_width
+            frame_bgr = cv2.resize(frame_bgr, (new_w, new_h))
+
         # RetinaFace works with RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
