@@ -15,18 +15,25 @@ warnings.filterwarnings("ignore")
 
 
 class OfflineAudienceAnalytics:
-    def __init__(self, fps=1):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"[*] Initializing ML Models on {self.device}...")
+    def __init__(self, fps=1, preloaded_models=None):
+        if preloaded_models:
+            self.device = preloaded_models["device"]
+            self.processor = preloaded_models["processor"]
+            self.model = preloaded_models["model"]
+            self.retina_model = preloaded_models["retina_model"]
+            print(f"[*] Re-using preloaded ML Models on {self.device}...")
+        else:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            print(f"[*] Initializing ML Models on {self.device}...")
 
-        # Load ViT for FER (Fine-tuned on FER2013)
-        model_name = "afurkank/vit-face-expression"
-        self.processor = ViTImageProcessor.from_pretrained(model_name)
-        self.model = ViTForImageClassification.from_pretrained(model_name).to(
-            self.device
-        )
-        self.model.eval()
-        self.retina_model = RetinaFace.build_model()
+            # Load ViT for FER (Fine-tuned on FER2013)
+            model_name = "afurkank/vit-face-expression"
+            self.processor = ViTImageProcessor.from_pretrained(model_name)
+            self.model = ViTForImageClassification.from_pretrained(model_name).to(
+                self.device
+            )
+            self.model.eval()
+            self.retina_model = RetinaFace.build_model()
 
         self.target_fps = fps  # Frames to process per second of video
 
