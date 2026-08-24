@@ -38,36 +38,38 @@ export default function VideosPage() {
             <Link to="/upload" className="btn btn-primary" style={{ marginTop: 20 }}>Upload Now</Link>
           </div>
         ) : (
-          <table className="video-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Event</th>
-                <th>File</th>
-                <th>Uploaded</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {videos.map(v => (
-                <tr key={v.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>#{v.id}</td>
-                  <td>{v.event}</td>
-                  <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {v.file_path?.split('/').pop() ?? '—'}
-                  </td>
-                  <td>{new Date(v.uploaded_at).toLocaleString()}</td>
-                  <td><span className={`status-badge status-${v.status}`}>{statusDot[v.status]} {v.status}</span></td>
-                  <td>
-                    <Link to={`/videos/${v.id}`} className="btn btn-ghost" style={{ fontSize: 12, padding: '5px 12px' }}>
-                      {v.status === 'COMPLETED' ? '📊 View Analytics' : '👁 View Status'}
-                    </Link>
-                  </td>
+          <div className="table-responsive">
+            <table className="video-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Event</th>
+                  <th>File</th>
+                  <th>Uploaded</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {videos.map(v => (
+                  <tr key={v.id}>
+                    <td style={{ color: 'var(--text-muted)' }}>#{v.id}</td>
+                    <td>{v.event}</td>
+                    <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {v.file_path?.split('/').pop() ?? '—'}
+                    </td>
+                    <td>{new Date(v.uploaded_at).toLocaleString()}</td>
+                    <td><span className={`status-badge status-${v.status}`}>{statusDot[v.status]} {v.status}</span></td>
+                    <td>
+                      <Link to={`/videos/${v.id}`} className="btn btn-ghost" style={{ fontSize: 12, padding: '5px 12px' }}>
+                        {v.status === 'COMPLETED' ? '📊 View Analytics' : '👁 View Status'}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

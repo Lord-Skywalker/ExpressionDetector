@@ -37,7 +37,7 @@ export default function EventsPage({ addToast }) {
         <p className="page-subtitle">Manage concerts, festivals, or any audience events.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+      <div className="events-grid">
 
         {/* Events list */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -50,24 +50,26 @@ export default function EventsPage({ addToast }) {
               <div className="empty-state-text">Create your first event using the form.</div>
             </div>
           ) : (
-            <table className="video-table">
-              <thead>
-                <tr>
-                  <th>ID</th><th>Event Name</th><th>Date</th><th>Location</th><th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map(ev => (
-                  <tr key={ev.id}>
-                    <td style={{ color: 'var(--text-muted)' }}>#{ev.id}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ev.name}</td>
-                    <td>{ev.date}</td>
-                    <td>{ev.location}</td>
-                    <td>{new Date(ev.created_at).toLocaleDateString()}</td>
+            <div className="table-responsive">
+              <table className="video-table">
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Event Name</th><th>Date</th><th>Location</th><th>Created</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {events.map(ev => (
+                    <tr key={ev.id}>
+                      <td style={{ color: 'var(--text-muted)' }}>#{ev.id}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ev.name}</td>
+                      <td>{ev.date}</td>
+                      <td>{ev.location}</td>
+                      <td>{new Date(ev.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

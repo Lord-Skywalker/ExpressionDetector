@@ -65,22 +65,39 @@ class ModelSingleton:
     def get_live_models(cls) -> dict:
         if cls._live_models is None:
             print("[*] Loading live detection models...")
-            import torch
-            from transformers import ViTForImageClassification, ViTImageProcessor
+            try:
+                import torch
+                print(f"[DEBUG] torch imported successfully, version: {torch.__version__}")
+            except Exception as e:
+                print(f"[!] FAILED TO IMPORT TORCH: {e}")
+                import traceback
+                traceback.print_exc()
+
+            try:
+                from transformers.models.vit.modeling_vit import ViTForImageClassification
+                from transformers.models.vit.image_processing_vit import ViTImageProcessor
+                print("[DEBUG] transformers imported successfully.")
+            except Exception as e:
+                print(f"[!] FAILED TO IMPORT transformers: {e}")
+                import traceback
+                traceback.print_exc()
+                
+                # Check if torch is available according to transformers
+                try:
+                    from transformers.utils.import_utils import is_torch_available
+                    print(f"[DEBUG] transformers is_torch_available: {is_torch_available()}")
+                except:
+                    pass
             
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             model_name = "afurkank/vit-face-expression"
             processor = ViTImageProcessor.from_pretrained(model_name)
             model = ViTForImageClassification.from_pretrained(model_name).to(device)
             model.eval()
-            face_cascade = cv2.CascadeClassifier(
-                cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            )
             cls._live_models = {
                 "processor": processor,
                 "model": model,
                 "device": device,
-                "face_cascade": face_cascade,
             }
             print(f"[✓] Live models loaded on {device}.")
         return cls._live_models
@@ -212,31 +229,37 @@ def live_detect(req: LiveDetectRequest):
     except Exception as e:
         return {"error": str(e)}, 400
 
-    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-    faces_detected = models["face_cascade"].detectMultiScale(
-        gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
-    )
+    from retinaface import RetinaFace
+    try:
+        faces_detected = RetinaFace.detect_faces(img_bgr)
+    except Exception as e:
+        print(f"[!] RetinaFace error: {e}")
+        faces_detected = {}
 
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     h_img, w_img, _ = img_rgb.shape
 
     faces_results = []
-    for x, y, w, h in faces_detected if len(faces_detected) > 0 else []:
-        x1, y1 = max(0, x), max(0, y)
-        x2, y2 = min(w_img, x + w), min(h_img, y + h)
+    if type(faces_detected) == dict:
+        for key, face in faces_detected.items():
+            if 'facial_area' not in face:
+                continue
+            x1_face, y1_face, x2_face, y2_face = face['facial_area']
+            x1, y1 = max(0, x1_face), max(0, y1_face)
+            x2, y2 = min(w_img, x2_face), min(h_img, y2_face)
 
-        if (x2 - x1) < 15 or (y2 - y1) < 15:
-            continue
+            if (x2 - x1) < 15 or (y2 - y1) < 15:
+                continue
 
-        crop_rgb = img_rgb[y1:y2, x1:x2]
-        try:
-            result = classify_face_crop(crop_rgb, models)
-            faces_results.append({
-                "box": [int(x), int(y), int(w), int(h)],
-                **result,
-            })
-        except Exception as e:
-            print(f"[!] Live inference error on face crop: {e}")
+            crop_rgb = img_rgb[y1:y2, x1:x2]
+            try:
+                result = classify_face_crop(crop_rgb, models)
+                faces_results.append({
+                    "box": [int(x1), int(y1), int(x2 - x1), int(y2 - y1)],
+                    **result,
+                })
+            except Exception as e:
+                print(f"[!] Live inference error on face crop: {e}")
 
     return {"faces": faces_results}
 

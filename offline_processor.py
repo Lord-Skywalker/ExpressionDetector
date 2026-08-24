@@ -3,7 +3,8 @@ import json
 import os
 import torch
 from retinaface import RetinaFace
-from transformers import ViTImageProcessor, ViTForImageClassification
+from transformers.models.vit.image_processing_vit import ViTImageProcessor
+from transformers.models.vit.modeling_vit import ViTForImageClassification
 from PIL import Image
 import numpy as np
 from tqdm import tqdm

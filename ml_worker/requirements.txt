@@ -2,9 +2,9 @@
 torch
 torchvision
 opencv-python-headless
-numpy
 retina-face
-transformers
+tf-keras
+transformers>=4.40.0
 Pillow
 tqdm
 
