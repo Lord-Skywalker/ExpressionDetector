@@ -18,6 +18,14 @@ export const wakeUpMLWorker = () => {
   }
 };
 
+// Checks the health status of the ML worker
+export const checkMLWorkerStatus = () => {
+  const url = import.meta.env.VITE_ML_WORKER_URL 
+    ? `${import.meta.env.VITE_ML_WORKER_URL}/health` 
+    : 'http://localhost:7860/health';
+  return fetch(url).then(r => r.json());
+};
+
 const ML_API = import.meta.env.VITE_ML_WORKER_URL
   ? axios.create({ baseURL: import.meta.env.VITE_ML_WORKER_URL })
   : null;

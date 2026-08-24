@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { detectLiveEmotion } from './api';
+import { detectLiveEmotion, checkMLWorkerStatus } from './api';
 
 const EMOTION_COLORS = {
   happy:    '#68d391',
@@ -16,6 +16,7 @@ export default function LivePage() {
   const [loading, setLoading] = useState(false);
   const [faces, setFaces] = useState([]);
   const [fps, setFps] = useState(0);
+  const [backendState, setBackendState] = useState('Checking...');
   const [intervalMs, setIntervalMs] = useState(400); // 400ms interval defaults to ~2.5 FPS
 
   const videoRef = useRef(null);
@@ -37,6 +38,21 @@ export default function LivePage() {
       });
     }
   }, [active]);
+
+  // Ping backend status periodically
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await checkMLWorkerStatus();
+        if (res.status === 'ok') setBackendState('Online');
+      } catch (err) {
+        setBackendState('Waking Up (Takes ~10s)');
+      }
+    };
+    checkStatus();
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Starts webcam stream
   const startCamera = async () => {
@@ -204,6 +220,9 @@ export default function LivePage() {
           <p className="page-subtitle">Real-time audience facial emotion classification using ViT Model.</p>
         </div>
         <div>
+          <span className={`badge`} style={{ fontSize: 12, padding: '6px 12px', marginRight: 12, background: backendState === 'Online' ? '#10b98122' : '#f59e0b22', color: backendState === 'Online' ? '#10b981' : '#f59e0b', border: '1px solid currentColor' }}>
+            {backendState === 'Online' ? '🟢 Backend Online' : `🟡 Backend: ${backendState}`}
+          </span>
           <span className={`badge ${active ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 12, padding: '6px 12px' }}>
             {active ? '● Live Active' : 'Camera Inactive'}
           </span>
