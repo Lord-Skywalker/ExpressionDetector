@@ -54,7 +54,13 @@ class ModelSingleton:
 
     @classmethod
     def get_pipeline(cls):
-            print("[✓] Pipeline ready.")
+        with cls._lock:
+            if cls._pipeline is None:
+                print("[*] Loading OfflineAudienceAnalytics pipeline...")
+                from offline_processor import OfflineAudienceAnalytics
+                live_models = cls.get_live_models()
+                cls._pipeline = OfflineAudienceAnalytics(fps=1, preloaded_models=live_models)
+                print("[✓] Pipeline ready.")
         return cls._pipeline
 
     @classmethod
