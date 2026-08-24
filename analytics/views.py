@@ -261,6 +261,64 @@ class VideoAssetUploadView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class VideoChunkUploadView(APIView):
+    """
+    POST /api/videos/chunk-upload/
+    Accepts chunked video uploads to bypass timeouts/size limits.
+    """
+    def post(self, request):
+        import os
+        import tempfile
+        from django.core.files import File
+
+        chunk = request.FILES.get("chunk")
+        chunk_index = int(request.data.get("chunk_index", 0))
+        total_chunks = int(request.data.get("total_chunks", 1))
+        upload_id = request.data.get("upload_id")
+        filename = request.data.get("filename", "video.mp4")
+        event_id = request.data.get("event")
+
+        if not chunk or not upload_id:
+            return Response({"error": "Missing chunk or upload_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        temp_dir = os.path.join(tempfile.gettempdir(), "crowdsense_uploads")
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(temp_dir, f"{upload_id}_{filename}")
+
+        mode = "ab" if chunk_index > 0 else "wb"
+        with open(temp_file_path, mode) as f:
+            for chunk_data in chunk.chunks():
+                f.write(chunk_data)
+
+        if chunk_index == total_chunks - 1:
+            try:
+                event = Event.objects.get(id=event_id)
+            except Event.DoesNotExist:
+                return Response({"error": "Invalid event ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+            with open(temp_file_path, "rb") as final_file:
+                asset = VideoAsset(event=event, status="PENDING")
+                asset.file_path.save(filename, File(final_file))
+                asset.save()
+
+            os.remove(temp_file_path)
+
+            import threading
+            from .tasks import process_video_asset
+            threading.Thread(target=process_video_asset, args=(asset.id,), daemon=True).start()
+
+            return Response(
+                {
+                    "message": "Upload complete. Processing queued.",
+                    "video_asset": VideoAssetSerializer(asset).data,
+                    "complete": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response({"message": f"Chunk {chunk_index+1}/{total_chunks} received.", "complete": False}, status=status.HTTP_200_OK)
+
+
 class VideoAssetStatusView(generics.RetrieveAPIView):
     """
     GET /api/videos/<id>/status/

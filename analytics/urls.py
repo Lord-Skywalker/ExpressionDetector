@@ -8,6 +8,7 @@ urlpatterns = [
     # Video asset endpoints
     path('videos/', views.VideoAssetListView.as_view(), name='video-list'),
     path('videos/upload/', views.VideoAssetUploadView.as_view(), name='video-upload'),
+    path('videos/chunk-upload/', views.VideoChunkUploadView.as_view(), name='video-chunk-upload'),
     path('videos/<int:pk>/status/', views.VideoAssetStatusView.as_view(), name='video-status'),
 
     # Analytics endpoints

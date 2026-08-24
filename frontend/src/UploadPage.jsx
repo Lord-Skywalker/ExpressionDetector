@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
-import { uploadVideo, getEvents, createEvent } from './api';
+import { uploadVideo, getEvents, createEvent, uploadVideoChunk } from './api';
 
 export default function UploadPage({ addToast }) {
   const navigate = useNavigate();
@@ -50,20 +50,40 @@ export default function UploadPage({ addToast }) {
     setUploading(true);
     setProgress(0);
 
-    const fd = new FormData();
-    fd.append('file_path', file);
-    fd.append('event', eventId);
-
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
+    
     try {
-      // Simulated chunked progress
-      const interval = setInterval(() => setProgress(p => Math.min(p + 6, 85)), 300);
-      const res = await uploadVideo(fd);
-      clearInterval(interval);
-      setProgress(100);
+      let finalRes = null;
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        const fd = new FormData();
+        fd.append('chunk', chunk);
+        fd.append('chunk_index', i);
+        fd.append('total_chunks', totalChunks);
+        fd.append('upload_id', uploadId);
+        fd.append('filename', file.name);
+        fd.append('event', eventId);
+
+        // We statically import uploadVideoChunk at the top of the file
+        const res = await uploadVideoChunk(fd);
+        
+        // Update actual progress based on chunks sent
+        setProgress(Math.round(((i + 1) / totalChunks) * 100));
+
+        if (res.data.complete) {
+          finalRes = res;
+        }
+      }
+
       addToast('Video uploaded! Processing queued.', 'success');
-      setTimeout(() => navigate(`/videos/${res.data.video_asset.id}`), 1000);
+      setTimeout(() => navigate(`/videos/${finalRes.data.video_asset.id}`), 1000);
     } catch (e) {
-      addToast('Upload failed. Is the Django server running?', 'error');
+      addToast('Upload failed. Connection or timeout error.', 'error');
       setUploading(false);
       setProgress(0);
     }

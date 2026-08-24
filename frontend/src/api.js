@@ -40,6 +40,9 @@ export const getVideos    = (eventId)  => API.get('/videos/', { params: eventId 
 export const uploadVideo  = (formData) => API.post('/videos/upload/', formData, {
   headers: { 'Content-Type': 'multipart/form-data' },
 });
+export const uploadVideoChunk = (formData) => API.post('/videos/chunk-upload/', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
 export const getVideoStatus  = (id) => API.get(`/videos/${id}/status/`);
 export const getAnalytics    = (id) => API.get(`/analytics/${id}/`);
 
