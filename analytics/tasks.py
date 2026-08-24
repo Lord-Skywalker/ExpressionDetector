@@ -88,17 +88,26 @@ def process_video_asset(video_asset_id):
         video_asset.save()
 
         # ── Clean up video file from disk ─────────────────────────────────────
-        # Results are now safely in PostgreSQL. The raw video file is no longer
-        # needed and would waste Render's limited disk space if kept.
         if ml_worker_url and os.path.exists(video_path):
             try:
                 os.remove(video_path)
             except OSError:
-                pass  # Non-critical: file cleanup failure shouldn't fail the task
+                pass
 
         return f"Successfully processed VideoAsset {video_asset_id}"
 
     except Exception as e:
         video_asset.status = "FAILED"
         video_asset.save()
+        
+        # Ensure cleanup even on failure
+        ml_worker_url = getattr(settings, "ML_WORKER_URL", None)
+        if ml_worker_url:
+            try:
+                video_path = video_asset.file_path.path
+                if os.path.exists(video_path):
+                    os.remove(video_path)
+            except Exception:
+                pass
+                
         return f"Failed processing VideoAsset {video_asset_id}: {str(e)}"

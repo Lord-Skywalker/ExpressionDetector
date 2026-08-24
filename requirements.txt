@@ -3,7 +3,7 @@ torch
 torchvision
 opencv-python
 numpy
-retina-face
+facenet-pytorch
 transformers
 tqdm
 Pillow

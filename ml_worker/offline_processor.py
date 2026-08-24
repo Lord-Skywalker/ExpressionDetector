@@ -2,7 +2,7 @@ import cv2
 import json
 import os
 import torch
-from retinaface import RetinaFace
+from facenet_pytorch import MTCNN
 from transformers.models.vit.image_processing_vit import ViTImageProcessor
 from transformers.models.vit.modeling_vit import ViTForImageClassification
 from PIL import Image
@@ -21,7 +21,7 @@ class OfflineAudienceAnalytics:
             self.device = preloaded_models["device"]
             self.processor = preloaded_models["processor"]
             self.model = preloaded_models["model"]
-            self.retina_model = preloaded_models["retina_model"]
+            self.mtcnn = preloaded_models["mtcnn"]
             print(f"[*] Re-using preloaded ML Models on {self.device}...")
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -34,7 +34,13 @@ class OfflineAudienceAnalytics:
                 self.device
             )
             self.model.eval()
-            self.retina_model = RetinaFace.build_model()
+            self.mtcnn = MTCNN(
+                keep_all=True,
+                device=self.device,
+                min_face_size=20,
+                thresholds=[0.6, 0.7, 0.7],
+                post_process=False,
+            )
 
         self.target_fps = fps  # Frames to process per second of video
 
@@ -87,7 +93,7 @@ class OfflineAudienceAnalytics:
             frame_idx += 1
             pbar.update(1)
 
-            # Force garbage collection to prevent TF/PyTorch memory leaks across frames
+            # Force garbage collection to prevent memory leaks across frames
             if frame_idx % 10 == 0:
                 gc.collect()
 
@@ -114,15 +120,16 @@ class OfflineAudienceAnalytics:
             new_h, new_w = int(h * scale), max_width
             frame_bgr = cv2.resize(frame_bgr, (new_w, new_h))
 
-        # RetinaFace works with RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        pil_frame = Image.fromarray(frame_rgb)
 
-        # Detect faces using RetinaFace
+        # Detect faces using MTCNN
         try:
-            faces = RetinaFace.detect_faces(frame_rgb, model=self.retina_model)
+            boxes, probs = self.mtcnn.detect(pil_frame)
         except Exception as e:
             print(f"Error detecting faces at {timestamp}s: {e}")
-            faces = {}
+            boxes = None
+            probs = None
 
         emotion_counts = {
             "angry": 0,
@@ -136,10 +143,11 @@ class OfflineAudienceAnalytics:
 
         total_faces = 0
 
-        if type(faces) == dict:
-            for key, face_info in faces.items():
-                facial_area = face_info["facial_area"]  # [x1, y1, x2, y2]
-                x1, y1, x2, y2 = facial_area
+        if boxes is not None:
+            for box, prob in zip(boxes, probs):
+                if prob is None or prob < 0.85:
+                    continue
+                x1, y1, x2, y2 = [int(v) for v in box]
 
                 # Ensure bounds
                 h, w, _ = frame_rgb.shape

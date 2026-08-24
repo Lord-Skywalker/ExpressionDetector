@@ -1,9 +1,8 @@
-# ML Pipeline
+# ML Pipeline — PyTorch only (no TensorFlow)
 torch
 torchvision
+facenet-pytorch   # MTCNN face detector (replaces retina-face + tensorflow)
 opencv-python-headless
-retina-face
-tf-keras
 transformers>=4.40.0
 Pillow
 tqdm
@@ -13,5 +12,5 @@ fastapi
 uvicorn[standard]
 python-multipart
 
-# HTTP client (for downloading videos from R2)
+# HTTP client
 requests
