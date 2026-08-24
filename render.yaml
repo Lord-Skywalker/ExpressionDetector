@@ -10,7 +10,7 @@ envVarGroups:
       - key: REDIS_URL
         sync: false
       - key: ML_WORKER_URL
-        value: https://expressiondetector-ml-4qcqiendnq-uc.a.run.app
+        value: https://expressiondetector-ml-382923967575.us-central1.run.app
 
 services:
   # ── Django REST API ────────────────────────────────────────────────────────
