@@ -26,3 +26,4 @@ dj-database-url
 
 # HTTP client (Celery worker calls HuggingFace Space)
 requests
+requests-toolbelt

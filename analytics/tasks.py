@@ -29,11 +29,20 @@ def process_video_asset(video_asset_id):
             video_asset.progress_percent = 10
             video_asset.save(update_fields=["progress_percent"])
 
+            from requests_toolbelt.multipart.encoder import MultipartEncoder
+            
             with open(video_path, "rb") as video_file:
+                m = MultipartEncoder(
+                    fields={
+                        'fps': '1',
+                        'file': ('video.mp4', video_file, 'video/mp4')
+                    }
+                )
+                
                 response = http_client.post(
                     f"{ml_worker_url.rstrip('/')}/process",
-                    files={"file": ("video.mp4", video_file, "video/mp4")},
-                    data={"fps": 1},
+                    data=m,
+                    headers={'Content-Type': m.content_type},
                     timeout=600,  # 10 min timeout for long videos
                 )
             response.raise_for_status()
