@@ -229,7 +229,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="analytics-grid">
+          <div className="dashboard-grid responsive-grid-2col" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
             {/* Face count over time */}
             <div className="card">
               <div className="card-header">

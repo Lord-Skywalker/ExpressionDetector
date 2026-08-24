@@ -56,7 +56,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, marginBottom: 20 }}>
+      <div className="responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, marginBottom: 20 }}>
 
         {/* Activity chart */}
         <div className="card">
@@ -132,6 +132,7 @@ export default function DashboardPage() {
             <Link to="/upload" className="btn btn-primary" style={{ marginTop: 16 }}>Upload Now</Link>
           </div>
         ) : (
+          <div className="table-responsive">
           <table className="video-table">
             <thead>
               <tr>
@@ -154,6 +155,7 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

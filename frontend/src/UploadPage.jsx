@@ -78,7 +78,7 @@ export default function UploadPage({ addToast }) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+      <div className="responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
 
         {/* Drop zone */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>

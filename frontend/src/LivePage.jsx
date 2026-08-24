@@ -229,7 +229,7 @@ export default function LivePage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+      <div className="responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
         
         {/* Left: Video / Canvas Card */}
         <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 460 }}>
