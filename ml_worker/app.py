@@ -205,15 +205,19 @@ def health():
     """
     Keepalive endpoint. Triggers model loading in background if not already loaded.
     """
-    def _warmup():
-        try:
-            ModelSingleton.get_live_models()
-            ModelSingleton.get_pipeline()
-        except Exception as e:
-            print(f"[!] Pre-warming error: {e}")
+    is_warming = ModelSingleton._pipeline is None or ModelSingleton._live_models is None
 
-    threading.Thread(target=_warmup, daemon=True).start()
-    return {"status": "ok", "service": "expressiondetector-ml-worker", "warming": True}
+    if is_warming:
+        def _warmup():
+            try:
+                ModelSingleton.get_live_models()
+                ModelSingleton.get_pipeline()
+            except Exception as e:
+                print(f"[!] Pre-warming error: {e}")
+
+        threading.Thread(target=_warmup, daemon=True).start()
+        
+    return {"status": "ok", "service": "expressiondetector-ml-worker", "warming": is_warming}
 
 
 @app.post("/process")
