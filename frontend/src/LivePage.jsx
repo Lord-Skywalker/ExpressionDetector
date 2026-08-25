@@ -44,7 +44,15 @@ export default function LivePage() {
     const checkStatus = async () => {
       try {
         const res = await checkMLWorkerStatus();
-        if (res.status === 'ok') setBackendState('Online');
+        if (res.status === 'ok') {
+          if (res.warming) {
+            setBackendState('Warming Up...');
+          } else {
+            setBackendState('Online');
+          }
+        } else {
+          setBackendState('Offline');
+        }
       } catch (err) {
         setBackendState('Waking Up (Takes ~10s)');
       }

@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { checkMLWorkerStatus } from './api';
 
 const links = [
   { to: '/',        icon: '📊', label: 'Dashboard' },
@@ -9,6 +11,37 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const [pipelineStatus, setPipelineStatus] = useState('Checking...');
+  const [statusClass, setStatusClass] = useState('warning');
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await checkMLWorkerStatus();
+        if (res.status === 'ok') {
+          if (res.warming) {
+            setPipelineStatus('Warming Up...');
+            setStatusClass('warning');
+          } else {
+            setPipelineStatus('ML Pipeline Ready');
+            setStatusClass(''); // Default green
+          }
+        } else {
+          setPipelineStatus('Offline');
+          setStatusClass('danger');
+        }
+      } catch (err) {
+        setPipelineStatus('Offline');
+        setStatusClass('danger');
+      }
+    };
+    
+    checkStatus();
+    // Poll every 10 seconds globally
+    const interval = setInterval(checkStatus, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -34,9 +67,9 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="status-dot">
-          <div className="dot" />
-          ML Pipeline Ready
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+          <div className={`status-dot ${statusClass}`} />
+          {pipelineStatus}
         </div>
       </div>
     </aside>
